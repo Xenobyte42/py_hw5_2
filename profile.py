@@ -3,22 +3,6 @@ from time import time
 from inspect import isclass
 
 
-def profile_class(obj):
-
-    def decorator(cls_func):
-
-        @wraps(cls_func)
-        def wrapper(*args, **kwargs):
-            print(f"`{obj.__name__}.{cls_func.__name__}` started")
-            timer = time()
-            answer = cls_func(*args, **kwargs)
-            print(f"`{obj.__name__}.{cls_func.__name__}` finished in {(time() - timer):.6f}s\n")
-            return answer
-            
-        return wrapper
-
-    return decorator
-
 def profile(obj):
     """
     If object is class - decorate all callable attributes of the class
@@ -28,10 +12,10 @@ def profile(obj):
     if not isclass(obj):
         @wraps(obj)
         def wrapper(*args, **kwargs):
-            print(f"`{obj.__name__}` started")
+            print(f"`{obj.__qualname__}` started")
             timer = time()
             answer = obj(*args, **kwargs)
-            print(f"`{obj.__name__}` finished in {(time() - timer):.6f}s\n")
+            print(f"`{obj.__qualname__}` finished in {(time() - timer):.6f}s\n")
             return answer
             
         return wrapper
@@ -40,7 +24,7 @@ def profile(obj):
         for attr_name in obj.__dict__:
             attr = getattr(obj, attr_name)
             if callable(attr):
-                setattr(obj, attr_name, profile_class(obj)(attr))
+                setattr(obj, attr_name, profile(attr))
         return obj
 
                 
