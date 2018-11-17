@@ -3,6 +3,29 @@ from time import time
 from inspect import isclass
 
 
+def _sub_profile(cls=None):
+
+    def decorator(func):
+
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            if cls is not None:
+                description = f"`{cls.__name__}.{func.__name__}`"
+            else:
+                description = f"`{func.__name__}`"
+
+            print(f"{description} started")
+
+            timer = time()
+            answer = func(*args, **kwargs)
+
+            print(f"{description} finished in {time() - timer:.6f}s")
+            return answer
+
+        return wrapper
+
+    return decorator
+
 def profile(obj):
     """
     If object is class - decorate all callable attributes of the class
@@ -10,21 +33,13 @@ def profile(obj):
     """
 
     if not isclass(obj):
-        @wraps(obj)
-        def wrapper(*args, **kwargs):
-            print(f"`{obj.__qualname__}` started")
-            timer = time()
-            answer = obj(*args, **kwargs)
-            print(f"`{obj.__qualname__}` finished in {(time() - timer):.6f}s\n")
-            return answer
-            
-        return wrapper
+        return _sub_profile()(obj)
 
     else:
         for attr_name in obj.__dict__:
             attr = getattr(obj, attr_name)
             if callable(attr):
-                setattr(obj, attr_name, profile(attr))
+                setattr(obj, attr_name, _sub_profile(obj)(attr))
         return obj
 
                 
